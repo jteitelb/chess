@@ -3,7 +3,7 @@ import pytest
 
 @pytest.fixture
 def supply_squareNames():
-    squareNames = list(map(squareName, board))
+    squareNames = list(map(squareName, board_coords))
     return squareNames
 
 def test_squareCoord():
@@ -20,7 +20,7 @@ def test_squareName():
 
 def test_squareCoord2():
     c = (0,0)
-    for c in board:
+    for c in board_coords:
         assert squareCoord(squareName(c)) == c
 
     with pytest.raises(TypeError):

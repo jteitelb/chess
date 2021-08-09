@@ -1,5 +1,7 @@
 import pygame
+import board
 from typing import Tuple
+
 
 def squareCoord(strCoord: str) -> Tuple[int, int]:
     if not type(strCoord) is str:
@@ -113,10 +115,10 @@ def generatePieces(color):
 
 # whitePawn = Piece("W","P", (0,6))
 
-board = [(i,j) for j in range(8) for i in range(8)]
+board_coords = [(i,j) for j in range(8) for i in range(8)]
 
 squares = pygame.sprite.Group()
-for s in board:
+for s in board_coords:
     temp = Square(s[0], s[1])
     # print(temp.rank, temp.file, temp.color, temp.rgbval, temp.rect.x, temp.rect.y)
     squares.add(temp)
