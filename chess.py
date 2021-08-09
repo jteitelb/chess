@@ -38,17 +38,19 @@ WHITE_SQUARE = (255, 231, 184)
 BLACK_SQUARE = (179, 133, 91)
 HIGHLIGHT_COLOR = (255,255,50)
 
+C_MAP = {0: "W", 1: "B"}
+
 highlighted = [(0,0), squareCoord("E4"), squareCoord("A3"), squareCoord("H8")]
 
 class Square(pygame.sprite.Sprite):
-    def __init__(self, s_file, s_rank):
+    def __init__(self, x, y):
         super().__init__()
-        self.s_file = s_file
-        self.s_rank = s_rank
-        self.color = (self.s_file + self.s_rank) % 2
+        self.x = x
+        self.y = y
+        self.color = (self.x + self.y) % 2
         self.image = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE))
         
-        if (s_file,s_rank) in highlighted:
+        if (x,y) in highlighted:
             self.image.fill(HIGHLIGHT_COLOR)
             # print(squareName((s_file, s_rank)), (s_file, s_rank))
         elif self.color:
@@ -56,13 +58,14 @@ class Square(pygame.sprite.Sprite):
         else:
             self.image.fill(WHITE_SQUARE)
         self.rect = self.image.get_rect()
-        self.rect.x = self.s_file*SQUARE_SIZE
-        self.rect.y = self.s_rank*SQUARE_SIZE
+        self.rect.x = self.x * SQUARE_SIZE
+        self.rect.y = self.y * SQUARE_SIZE
 
     def name(self):
-        return squareName(self.s_file, self.s_rank)
+        return squareName((self.x, self.y))
+
     def __str__(self):
-        return str(self.color)
+        return f"{self.name()}: {C_MAP[self.color]}"
 
 board = [(i,j) for j in range(8) for i in range(8)]
 
