@@ -5,7 +5,7 @@ from typing import Tuple
 
 def square_coords(square: str) -> Tuple[int, int]:
     if not type(square) is str:
-        raise TypeError("expeced string")
+        raise TypeError("expected string")
     if len(square) != 2:
         raise ValueError("expected 2 characters")
     (s_file, s_rank) = square
@@ -97,9 +97,30 @@ class Piece(pygame.sprite.Sprite):
 
     def draw(self):
         window.blit(self.image, board_to_screen(self.coords))
+
+    # probe in a straight line given a direction e.g. (0,1) will probe downward
+    # return a list of squares on the board in the direction probed up to and including the first non-empty square
+    def probe_line(self, direction):
+        results = []
+        current = add_coords(self.coords, direction)
+        searching = True
+        while searching:
+            found = peek(current)
+            results.append(square_name(current))
+            if (peek(current) != None) or (not valid_coord(current)):
+                searching = False
+            current = add_coords(current, direction)
+        return results
+
+
     def __str__(self):
         return f"{self.color.lower()}{self.piece_type} {square_name(self.coords)}"
 
+def valid_coord(coord):
+    (x,y) = coord
+    if x < 0 or x > 7 or y < 0 or y > 7:
+        return False
+    return True
 
 def generate_pieces(color):
     if color == "W":
@@ -144,12 +165,21 @@ pieces.add(black_pieces)
 # peek a square by name e.g. "A1"
 # returns the first piece found, or None if no pieces are on the square
 def peek(square):
-    peek_coords = square_coords(square)
+    if type(square) == tuple:
+        if valid_coord(square):
+            peek_coords = square
+        else:
+            raise ValueError("invalid coordinates")
+    else:
+        peek_coords = square_coords(square)
+
     for p in pieces:
         if p.coords == peek_coords:
             return p
     return None
 
+epawn = peek("e2")
+print(epawn.probe_line((0,-1)))
 
 
 if __name__ == "__main__":
