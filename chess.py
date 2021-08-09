@@ -3,20 +3,20 @@ import board
 from typing import Tuple
 
 
-def squareCoord(strCoord: str) -> Tuple[int, int]:
+def squareCoords(strCoord: str) -> Tuple[int, int]:
     if not type(strCoord) is str:
         raise TypeError("expeced string")
     if len(strCoord) != 2:
         raise ValueError("expected 2 characters")
     (s_file, s_rank) = strCoord
-    s_file = s_file.upper()
-    if s_file < "A" or s_file > "H":
+    s_file = s_file.lower()
+    if s_file < "a" or s_file > "h":
         raise ValueError("invalid file")
 
     if s_rank < "1" or s_rank > "8":
         raise ValueError("invalid rank")
 
-    xVal = ord(s_file) - ord('A')
+    xVal = ord(s_file) - ord('a')
     yVal = 8 - int(s_rank)
     return (xVal, yVal)
 
@@ -27,7 +27,7 @@ def squareName(coordinate: Tuple[int, int]) -> str:
     (x,y) = coordinate
     if x < 0 or x > 7 or y < 0 or y > 7:
         raise ValueError("invalid x or y coordinate")
-    letter = chr(x + ord('A'))
+    letter = chr(x + ord('a'))
     rank = 8 - y
     return f"{letter}{rank}"
 
@@ -84,12 +84,18 @@ class Piece(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(pygame.image.load(self.getImageFile()), SQUARE_DIMENSIONS)
         self.rect = self.image.get_rect()
         (self.rect.x, self.rect.y) = board_to_screen(self.coords)
+    
+    def move(self, square):
+        self.coords = squareCoords(square)
+        (self.rect.x, self.rect.y) = board_to_screen(self.coords)
 
     def getImageFile(self):
         return f"pieces/{self.color.lower()}{self.pieceType}.png"
 
     def draw(self):
         window.blit(self.image, board_to_screen(self.coords))
+    def __str__(self):
+        return f"{self.color.lower()}{self.pieceType} {squareName(self.coords)}"
 
 
 def generatePieces(color):
@@ -125,6 +131,20 @@ for s in board_coords:
 
 white_pieces = generatePieces("W")
 black_pieces = generatePieces("B")
+pieces = white_pieces.copy()
+pieces.add(black_pieces)
+
+def peek(square):
+    peekCoords = squareCoords(square)
+    for p in pieces:
+        if p.coords == peekCoords:
+            return p
+    return None
+
+
+
+# print(peek("A1"))
+# peek("E2").move("E4")
 
 if __name__ == "__main__":
     window = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
@@ -137,8 +157,7 @@ if __name__ == "__main__":
                 running = False
 
         squares.draw(window)
-        white_pieces.draw(window)
-        black_pieces.draw(window)
+        pieces.draw(window)
         pygame.display.update()
 
     
