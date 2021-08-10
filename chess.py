@@ -2,6 +2,38 @@ import pygame
 import board
 from typing import Tuple
 
+# trying out idea from:
+# http://composingprograms.com/pages/27-object-abstraction.html#multiple-representations
+# cool, but might be better to just use coords as canonical representation, avoid duplication
+class Square_XY():
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    @property
+    def s_file(self):
+        return chr(self.x + ord('a'))
+    @property
+    def s_rank(self):
+        return (8 - self.y)
+    
+    def __repr__(self):
+        return f"({self.x},{self.y})"
+
+class Square_FR():
+    def __init__(self, square_name):
+        s_file, s_rank = square_name
+        self.s_file = s_file.lower()
+        self.s_rank = s_rank
+    @property
+    def x(self):
+        return ord(self.s_file) - ord('a')
+    @property
+    def y(self):
+        return (8 - int(self.s_rank))
+    
+    def __repr__(self):
+        return f"{self.s_file}{self.s_rank}"
+
 
 def square_coords(square: str) -> Tuple[int, int]:
     if not type(square) is str:
@@ -50,15 +82,14 @@ C_MAP = {0: "W", 1: "B"}
 # highlighted = [(0,0), squareCoord("E4"), squareCoord("A3"), squareCoord("H8")]
 highlighted = []
 
-class Square(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+class SquareSprite(pygame.sprite.Sprite):
+    def __init__(self, square):
         super().__init__()
-        self.x = x
-        self.y = y
-        self.color = (self.x + self.y) % 2
+        self.square = square
+        self.color = (self.square.x + self.square.y) % 2
         self.image = pygame.Surface(SQUARE_DIMENSIONS)
         
-        if (x,y) in highlighted:
+        if (square.x,square.y) in highlighted:
             self.image.fill(HIGHLIGHT_COLOR)
             # print(squareName((s_file, s_rank)), (s_file, s_rank))
         elif self.color:
@@ -66,14 +97,15 @@ class Square(pygame.sprite.Sprite):
         else:
             self.image.fill(WHITE_SQUARE)
         self.rect = self.image.get_rect()
-        self.rect.x = self.x * SQUARE_SIZE
-        self.rect.y = self.y * SQUARE_SIZE
-
+        self.rect.x = self.square.x * SQUARE_SIZE
+        self.rect.y = self.square.y * SQUARE_SIZE
+    
+    @property
     def name(self):
-        return square_name((self.x, self.y))
+        return f"{self.square.s_file}{self.square.s_rank}"
 
-    def __str__(self):
-        return f"{self.name()}: {C_MAP[self.color]}"
+    def __repr__(self):
+        return f"{self.name}: {C_MAP[self.color]}"
 
 class Piece(pygame.sprite.Sprite):
     def __init__(self, color, piece_type, coords):
@@ -197,14 +229,17 @@ def generate_pieces(color):
 def add_coords(a, b):
     return tuple(x + y for x, y in zip(a,b))
 
-# get all coordinates on the board
-board_coords = [(i,j) for j in range(8) for i in range(8)]
+# create all squares on the board
+board_coords = [Square_XY(i,j) for j in range(8) for i in range(8)]
 
 # create squares
 squares = pygame.sprite.Group()
-for s in board_coords:
-    temp = Square(s[0], s[1])
-    squares.add(temp)
+for y in range(8):
+    for x in range(8):
+        temp = SquareSprite(Square_XY(x,y))
+        squares.add(temp)
+for s in squares:
+    print(s)
 
 # create pieces
 white_pieces = generate_pieces("W")
