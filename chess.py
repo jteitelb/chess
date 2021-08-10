@@ -89,7 +89,14 @@ class Piece(pygame.sprite.Sprite):
         return square_name(self.coords)
 
     def move(self, square):
-        self.coords = square_coords(square)
+        if type(square) == str:
+            new_coords = square_coords(square)
+        else:
+            new_coords = square
+        if valid_coord(new_coords):
+            self.coords = square_coords(square)
+        else:
+            raise ValueError("Invalid Coordinates")
         (self.rect.x, self.rect.y) = board_to_screen(self.coords)
 
     def get_image_filename(self):
@@ -111,10 +118,53 @@ class Piece(pygame.sprite.Sprite):
                 searching = False
             current = add_coords(current, direction)
         return results
+    
+    def probe_multi(self, directions):
+        res = []
+        for d in directions:
+            res += self.probe_line(d)
 
+    def relative(self, relative_pos):
+        return add_coords(self.coords, relative_pos)
+
+    def get_moves(self):
+        if self.piece_type == "P":
+            return self.get_pawn_moves()
+
+    # TODO: promotions and en passant
+    def get_pawn_moves(self):
+        moves = []
+        if self.color == "W":
+            single_move = self.relative((0,-1))
+            double_move = self.relative((0,-2))
+        elif self.color == "B":
+            single_move = self.relative((0,1))
+            double_move = self.relative((0,2))
+        else:
+            raise ValueError("unexpected color")
+
+        if peek(single_move) == None:
+            moves.append(single_move)
+            if peek(double_move) == None:
+                moves.append(double_move)
+        
+        # captures
+        (x,y) = single_move
+        l_capture = (x-1, y)
+        r_capture = (x+1, y)
+        l_piece = peek(l_capture)
+        r_piece = peek(r_capture)
+        if l_piece != None and l_piece.color != self.color:
+            moves.append(l_capture)
+        if r_piece != None and r_piece.color != self.color:
+            moves.append(r_capture)
+
+        return moves
 
     def __str__(self):
         return f"{self.color.lower()}{self.piece_type} {square_name(self.coords)}"
+
+
 
 def valid_coord(coord):
     (x,y) = coord
@@ -162,25 +212,33 @@ black_pieces = generate_pieces("B")
 pieces = white_pieces.copy()
 pieces.add(black_pieces)
 
-# peek a square by name e.g. "A1"
+# peek a square by name or coordinates e.g. "A1" or (0,7)
 # returns the first piece found, or None if no pieces are on the square
 def peek(square):
     if type(square) == tuple:
-        if valid_coord(square):
-            peek_coords = square
-        else:
-            raise ValueError("invalid coordinates")
+        peek_coords = square
     else:
         peek_coords = square_coords(square)
+
+    if not valid_coord(peek_coords):
+        return None
 
     for p in pieces:
         if p.coords == peek_coords:
             return p
     return None
 
+""" 
 epawn = peek("e2")
-print(epawn.probe_line((0,-1)))
+# add black pieces to d3 f3
+peek("d7").move("d3")
+peek("f7").move("f3")
+print([square_name(m) for m in epawn.get_moves()])
 
+peek("a2").move("a6")
+peek("c2").move("c6")
+print([square_name(m) for m in peek("b7").get_moves()])
+"""
 
 if __name__ == "__main__":
     window = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
