@@ -2,8 +2,12 @@ from chess import *
 import pytest
 
 @pytest.fixture
-def supply_squareNames():
-    squareNames = list(map(square_name, board_coords))
+def supply_board_coords():
+    return [(i,j) for j in range(8) for i in range(8)]
+
+@pytest.fixture
+def supply_squareNames(supply_board_coords):
+    squareNames = list(map(square_name, supply_board_coords))
     return squareNames
 
 def test_squareCoord():
@@ -18,9 +22,9 @@ def test_squareName():
     assert square_name((7,0)) == "h8"
     assert square_name((7,7)) == "h1"
 
-def test_squareCoord2():
+def test_squareCoord2(supply_board_coords):
     c = (0,0)
-    for c in board_coords:
+    for c in supply_board_coords:
         assert square_coords(square_name(c)) == c
 
     with pytest.raises(TypeError):

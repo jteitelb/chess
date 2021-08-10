@@ -197,7 +197,6 @@ class Piece(pygame.sprite.Sprite):
         return f"{self.color.lower()}{self.piece_type} {square_name(self.coords)}"
 
 
-
 def valid_coord(coord):
     (x,y) = coord
     if x < 0 or x > 7 or y < 0 or y > 7:
@@ -228,9 +227,6 @@ def generate_pieces(color):
 
 def add_coords(a, b):
     return tuple(x + y for x, y in zip(a,b))
-
-# create all squares on the board
-board_coords = [Square_XY(i,j) for j in range(8) for i in range(8)]
 
 # create squares
 squares = pygame.sprite.Group()
