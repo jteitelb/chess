@@ -7,9 +7,10 @@ def supply_board_coords():
 
 @pytest.fixture
 def supply_squareNames(supply_board_coords):
-    squareNames = list(map(square_name, supply_board_coords))
+    squareNames = [Square(coords).name for coords in supply_board_coords]
     return squareNames
 
+"""
 def test_squareCoord():
     assert square_coords("a8") == (0,0)
     assert square_coords("a1") == (0,7)
@@ -40,5 +41,5 @@ def test_squareName2(supply_squareNames):
         assert square_name(square_coords(s)) == s
     with pytest.raises(TypeError):
         square_name("A1")
-
+"""
 
