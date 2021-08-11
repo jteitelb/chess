@@ -26,6 +26,8 @@ class Square():
         else:
             raise TypeError("Expected tuple or str")
     
+
+
     @property
     def coords(self):
         return (self.x, self.y)
@@ -42,10 +44,15 @@ class Square():
     def screen_coords(self):
         return (SQUARE_SIZE * self.x, SQUARE_SIZE * self.y)
 
+    def is_valid(self):
+        (x,y) = self.coords
+        if x < 0 or x > 7 or y < 0 or y > 7:
+            return False
+        return True
     # peek a square by name or coordinates e.g. "A1" or (0,7)
     # returns the first piece found, or None if no pieces are on the square
     def peek(self):
-        if not valid_coord(self.coords):
+        if not self.is_valid():
             return None
         for p in pieces:
             if p.square.coords == self.coords:
@@ -119,7 +126,7 @@ class Piece(pygame.sprite.Sprite):
         (self.rect.x, self.rect.y) = self.square.screen_coords
 
     def move(self, square):
-        if valid_coord(square.coords):
+        if square.is_valid():
             self.square = square
         else:
             raise ValueError("Invalid Coordinates")
@@ -135,14 +142,15 @@ class Piece(pygame.sprite.Sprite):
     # return a list of squares on the board in the direction probed up to and including the first non-empty square
     def probe_line(self, direction):
         results = []
-        current = Square(add_coords(self.coords, direction))
+        current = Square(add_coords(self.square.coords, direction))
         searching = True
         while searching:
             found = current.peek()
-            results.append(current)
-            if (current.peek() != None) or (not valid_coord(current)):
+            if current.is_valid():
+                results.append(current)
+            if (current.peek() != None) or (not current.is_valid()):
                 searching = False
-            current = Square(add_coords(current, direction))
+            current = Square(add_coords(current.coords, direction))
         return results
     
     def probe_multi(self, directions):
@@ -186,13 +194,6 @@ class Piece(pygame.sprite.Sprite):
 
     def __str__(self):
         return f"{self.color.lower()}{self.piece_type} {self.square.name}"
-
-
-def valid_coord(coord):
-    (x,y) = coord
-    if x < 0 or x > 7 or y < 0 or y > 7:
-        return False
-    return True
 
 def generate_pieces(color):
     if color == "W":
@@ -247,6 +248,8 @@ print([m.name for m in epawn.get_moves()])
 Square("a2").peek().move(Square("a6"))
 Square("c2").peek().move(Square("c6"))
 print([m.name for m in Square("b7").peek().get_moves()])
+
+print([s.name for s in Square("d1").peek().probe_line((-1,-1))])
 
 
 if __name__ == "__main__":
