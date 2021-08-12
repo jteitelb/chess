@@ -10,7 +10,8 @@ a chess game, just for fun
   - moving pieces by click
 - unit tests
   - Module functions
-    - valid_coord
+  - Square methods
+    - is_valid
     - peek
   - Piece methods
     - move

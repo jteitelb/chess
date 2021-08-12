@@ -6,23 +6,54 @@ def supply_board_coords():
     return [(i,j) for j in range(8) for i in range(8)]
 
 @pytest.fixture
-def supply_squareNames(supply_board_coords):
-    squareNames = [Square(coords).name for coords in supply_board_coords]
-    return squareNames
+def supply_square_names(supply_board_coords):
+    square_names = [Square(coords).name for coords in supply_board_coords]
+    return square_names
+
+@pytest.fixture
+def black_pieces():
+    return generate_pieces("B")
+
+@pytest.fixture
+def white_pieces():
+    return generate_pieces("W")
+
+def test_generate_pieces(black_pieces, white_pieces):
+    assert len(black_pieces) == 16
+    assert len(white_pieces) == 16
+
+def test_square_init_by_name():
+    assert Square("a8").coords == (0,0)
+    assert Square("a1").coords == (0,7)
+    assert Square("H1").coords == (7,7)
+    assert Square("H8").coords == (7,0)
+    assert Square("e4").coords == (4,4)
+
+def test_square_init_by_coord():
+    assert Square((0,0)).name == "a8"
+    assert Square((0,7)).name == "a1"
+    assert Square((7,7)).name == "h1"
+    assert Square((7,0)).name == "h8"
+    assert Square((4,4)).name == "e4"
+
+@pytest.mark.parametrize("param",
+    ["a9", "i1", "s0", "22", "#@",
+    (-1,0), (0,-1), (0,8), (8,0), (20,20)])
+def test_square_init_invalid_value(param):
+    with pytest.raises(ValueError):
+        Square(param)
+
+@pytest.mark.parametrize("param",
+    [7,(2.3,0), ("a3",), ("a", "3")])
+def test_square_init_invalid_type(param):
+    with pytest.raises(TypeError):
+        Square(param)
+
+def test_square_is_valid():
+    assert Square("a1").is_valid()
+
 
 """
-def test_squareCoord():
-    assert square_coords("a8") == (0,0)
-    assert square_coords("a1") == (0,7)
-    assert square_coords("H1") == (7,7)
-    assert square_coords("H8") == (7,0)
-
-def test_squareName():
-    assert square_name((0,0)) == "a8"
-    assert square_name((0,7)) == "a1"
-    assert square_name((7,0)) == "h8"
-    assert square_name((7,7)) == "h1"
-
 def test_squareCoord2(supply_board_coords):
     c = (0,0)
     for c in supply_board_coords:

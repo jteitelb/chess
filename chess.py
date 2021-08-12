@@ -18,6 +18,11 @@ highlighted = []
 class Square:
     def __init__(self, square):
         if type(square) == tuple:
+            if len(square) != 2:
+                raise TypeError("Square expects 2 coordinates")
+            (x,y) = square
+            if type(x) != int or type(y) != int:
+                raise TypeError("Square expects integers when tuple given")
             (self.x, self.y) = square
         elif type(square) == str:
             (f, r) = square
@@ -139,9 +144,6 @@ class Piece(pygame.sprite.Sprite):
     def get_image_filename(self):
         return f"pieces/{self.color.lower()}{self.piece_type}.png"
 
-    def draw(self):
-        window.blit(self.image, self.square.screen_coords)
-
     # probe in a straight line given a direction e.g. (0,1) will probe downward
     # return a list of squares on the board in the direction probed up to and including the first non-empty square
     def probe_line(self, direction):
@@ -239,8 +241,7 @@ pieces = white_pieces.copy()
 pieces.add(black_pieces)
 
 
-
-
+""" 
 epawn = Square("e2").peek()
 # add black pieces to d3 f3
 Square("d7").peek().move("d3")
@@ -252,7 +253,7 @@ Square("c2").peek().move("c6")
 print([m.name for m in Square("b7").peek().get_moves()])
 
 print([s.name for s in Square("d1").peek().probe_line((-1,-1))])
-
+"""
 
 if __name__ == "__main__":
     window = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
