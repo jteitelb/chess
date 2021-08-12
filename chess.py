@@ -57,8 +57,7 @@ class Square():
                 return p
         return None
     
-    def relative(self, relative_pos):
-        (dx,dy) = relative_pos
+    def relative(self, dx, dy):
         return Square((self.x + dx, self.y + dy))
 
     def __repr__(self):
@@ -140,8 +139,9 @@ class Piece(pygame.sprite.Sprite):
     # probe in a straight line given a direction e.g. (0,1) will probe downward
     # return a list of squares on the board in the direction probed up to and including the first non-empty square
     def probe_line(self, direction):
+        (dx, dy) = direction
         results = []
-        current = self.square.relative(direction)
+        current = self.square.relative(dx, dy)
         searching = True
         while searching:
             found = current.peek()
@@ -149,7 +149,7 @@ class Piece(pygame.sprite.Sprite):
                 results.append(current)
             if (current.peek() != None) or (not current.is_valid()):
                 searching = False
-            current = current.relative(direction)
+            current = current.relative(dx, dy)
         return results
     
     def probe_multi(self, directions):
@@ -165,11 +165,11 @@ class Piece(pygame.sprite.Sprite):
     def get_pawn_moves(self):
         moves = []
         if self.color == "W":
-            single_move = self.square.relative((0,-1))
-            double_move = self.square.relative((0,-2))
+            single_move = self.square.relative(0,-1)
+            double_move = self.square.relative(0,-2)
         elif self.color == "B":
-            single_move = self.square.relative((0,1))
-            double_move = self.square.relative((0,2))
+            single_move = self.square.relative(0,1)
+            double_move = self.square.relative(0,2)
         else:
             raise ValueError("unexpected color")
 
