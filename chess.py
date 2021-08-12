@@ -2,7 +2,75 @@ import pygame
 import board
 from typing import Tuple
 
+BOARD_LENGTH = 560
+WIN_WIDTH = BOARD_LENGTH
+WIN_HEIGHT = BOARD_LENGTH
+SQUARE_SIZE = BOARD_LENGTH // 8
+SQUARE_DIMENSIONS = (SQUARE_SIZE, SQUARE_SIZE)
 
+WHITE_SQUARE = (255, 231, 184)
+BLACK_SQUARE = (179, 133, 91)
+HIGHLIGHT_COLOR = (255,255,50)
+
+COLOR_MAP = {0: "W", 1: "B"}
+highlighted = []
+
+class Square:
+    def __init__(self, square):
+        if type(square) == tuple:
+            if len(square) != 2:
+                raise TypeError("Square expects 2 coordinates")
+            (x,y) = square
+            if type(x) != int or type(y) != int:
+                raise TypeError("Square expects integers when tuple given")
+            (self.x, self.y) = square
+        elif type(square) == str:
+            (f, r) = square
+            self.x = ord(f.lower()) - ord('a')
+            self.y = (8 - int(r))
+        else:
+            raise TypeError("Expected tuple or str")
+            
+        if not self.is_valid():
+            raise ValueError("Attempted to create invalid Square")
+    @property
+    def coords(self):
+        return (self.x, self.y)
+    @property
+    def s_file(self):
+        return chr(self.x + ord('a'))
+    @property
+    def s_rank(self):
+        return (8 - self.y)
+    @property
+    def name(self):
+        return f"{self.s_file}{self.s_rank}"
+    @property
+    def screen_coords(self):
+        return (SQUARE_SIZE * self.x, SQUARE_SIZE * self.y)
+
+    def is_valid(self):
+        (x,y) = self.coords
+        if x < 0 or x > 7 or y < 0 or y > 7:
+            return False
+        return True
+    # peek a square by name or coordinates e.g. "A1" or (0,7)
+    # returns the first piece found, or None if no pieces are on the square
+    def peek(self):
+        if not self.is_valid():
+            return None
+        for p in pieces:
+            if p.square.coords == self.coords:
+                return p
+        return None
+    
+    def relative(self, dx, dy):
+        return Square((self.x + dx, self.y + dy))
+
+    def __repr__(self):
+        return f"({self.x},{self.y})"
+
+""" 
 def square_coords(square: str) -> Tuple[int, int]:
     if not type(square) is str:
         raise TypeError("expected string")
@@ -30,102 +98,72 @@ def square_name(coords: Tuple[int, int]) -> str:
     letter = chr(x + ord('a'))
     rank = 8 - y
     return f"{letter}{rank}"
+ """
 
-BOARD_LENGTH = 560
-WIN_WIDTH = BOARD_LENGTH
-WIN_HEIGHT = BOARD_LENGTH
-SQUARE_SIZE = BOARD_LENGTH // 8
-SQUARE_DIMENSIONS = (SQUARE_SIZE, SQUARE_SIZE)
-
-WHITE_SQUARE = (255, 231, 184)
-BLACK_SQUARE = (179, 133, 91)
-HIGHLIGHT_COLOR = (255,255,50)
-
-def board_to_screen(coord):
-    (x,y) = coord
-    return (SQUARE_SIZE * x, SQUARE_SIZE * y)
-
-C_MAP = {0: "W", 1: "B"}
-
-# highlighted = [(0,0), squareCoord("E4"), squareCoord("A3"), squareCoord("H8")]
-highlighted = []
-
-class Square(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+class SquareSprite(pygame.sprite.Sprite):
+    def __init__(self, square):
         super().__init__()
-        self.x = x
-        self.y = y
-        self.color = (self.x + self.y) % 2
+        self.square = square
+        self.color = COLOR_MAP[(self.square.x + self.square.y) % 2]
         self.image = pygame.Surface(SQUARE_DIMENSIONS)
         
-        if (x,y) in highlighted:
+        if (square.x,square.y) in highlighted:
             self.image.fill(HIGHLIGHT_COLOR)
-            # print(squareName((s_file, s_rank)), (s_file, s_rank))
-        elif self.color:
+        elif self.color == "B":
             self.image.fill(BLACK_SQUARE)
-        else:
+        elif self.color == "W":
             self.image.fill(WHITE_SQUARE)
+        else:
+            raise ValueError("Unexpected Color")
         self.rect = self.image.get_rect()
-        self.rect.x = self.x * SQUARE_SIZE
-        self.rect.y = self.y * SQUARE_SIZE
+        self.rect.x = self.square.x * SQUARE_SIZE
+        self.rect.y = self.square.y * SQUARE_SIZE
 
-    def name(self):
-        return square_name((self.x, self.y))
-
-    def __str__(self):
-        return f"{self.name()}: {C_MAP[self.color]}"
+    def __repr__(self):
+        return f"{self.square.name}: {self.color}"
 
 class Piece(pygame.sprite.Sprite):
-    def __init__(self, color, piece_type, coords):
+    def __init__(self, color, piece_type, square):
         super().__init__()
         self.color = color
         self.piece_type = piece_type
-        self.coords = coords
+        self.square = Square(square)
         self.image = pygame.transform.scale(pygame.image.load(self.get_image_filename()), SQUARE_DIMENSIONS)
         self.rect = self.image.get_rect()
-        (self.rect.x, self.rect.y) = board_to_screen(self.coords)
+        (self.rect.x, self.rect.y) = self.square.screen_coords
 
-    def get_square(self):
-        return square_name(self.coords)
+    def move(self, square_name):
+        try:
+            square = Square(square_name)
+        except ValueError:
+            raise ValueError(f"Invalid square: \"{square_name}\"")
 
-    def move(self, square):
-        if type(square) == str:
-            new_coords = square_coords(square)
-        else:
-            new_coords = square
-        if valid_coord(new_coords):
-            self.coords = square_coords(square)
-        else:
-            raise ValueError("Invalid Coordinates")
-        (self.rect.x, self.rect.y) = board_to_screen(self.coords)
+        self.square = square
+        (self.rect.x, self.rect.y) = self.square.screen_coords
 
     def get_image_filename(self):
         return f"pieces/{self.color.lower()}{self.piece_type}.png"
 
-    def draw(self):
-        window.blit(self.image, board_to_screen(self.coords))
-
     # probe in a straight line given a direction e.g. (0,1) will probe downward
     # return a list of squares on the board in the direction probed up to and including the first non-empty square
     def probe_line(self, direction):
+        (dx, dy) = direction
         results = []
-        current = add_coords(self.coords, direction)
-        searching = True
-        while searching:
-            found = peek(current)
-            results.append(square_name(current))
-            if (peek(current) != None) or (not valid_coord(current)):
-                searching = False
-            current = add_coords(current, direction)
+        current = self.square
+        while True:
+            try:
+                current = current.relative(dx, dy)
+            except ValueError:
+                break
+            results.append(current)
+            if current.peek() != None:
+                break
         return results
     
     def probe_multi(self, directions):
         res = []
         for d in directions:
             res += self.probe_line(d)
-
-    def relative(self, relative_pos):
-        return add_coords(self.coords, relative_pos)
 
     def get_moves(self):
         if self.piece_type == "P":
@@ -135,25 +173,25 @@ class Piece(pygame.sprite.Sprite):
     def get_pawn_moves(self):
         moves = []
         if self.color == "W":
-            single_move = self.relative((0,-1))
-            double_move = self.relative((0,-2))
+            single_move = self.square.relative(0,-1)
+            double_move = self.square.relative(0,-2)
         elif self.color == "B":
-            single_move = self.relative((0,1))
-            double_move = self.relative((0,2))
+            single_move = self.square.relative(0,1)
+            double_move = self.square.relative(0,2)
         else:
             raise ValueError("unexpected color")
 
-        if peek(single_move) == None:
+        if single_move.peek() == None:
             moves.append(single_move)
-            if peek(double_move) == None:
+            if double_move.peek() == None:
                 moves.append(double_move)
         
         # captures
-        (x,y) = single_move
-        l_capture = (x-1, y)
-        r_capture = (x+1, y)
-        l_piece = peek(l_capture)
-        r_piece = peek(r_capture)
+        (x,y) = single_move.coords
+        l_capture = Square((x-1, y))
+        r_capture = Square((x+1, y))
+        l_piece = l_capture.peek()
+        r_piece = r_capture.peek()
         if l_piece != None and l_piece.color != self.color:
             moves.append(l_capture)
         if r_piece != None and r_piece.color != self.color:
@@ -162,15 +200,7 @@ class Piece(pygame.sprite.Sprite):
         return moves
 
     def __str__(self):
-        return f"{self.color.lower()}{self.piece_type} {square_name(self.coords)}"
-
-
-
-def valid_coord(coord):
-    (x,y) = coord
-    if x < 0 or x > 7 or y < 0 or y > 7:
-        return False
-    return True
+        return f"{self.color.lower()}{self.piece_type} {self.square.name}"
 
 def generate_pieces(color):
     if color == "W":
@@ -194,17 +224,15 @@ def generate_pieces(color):
     return result
 
 
-def add_coords(a, b):
-    return tuple(x + y for x, y in zip(a,b))
-
-# get all coordinates on the board
-board_coords = [(i,j) for j in range(8) for i in range(8)]
-
 # create squares
 squares = pygame.sprite.Group()
-for s in board_coords:
-    temp = Square(s[0], s[1])
-    squares.add(temp)
+for y in range(8):
+    for x in range(8):
+        temp = SquareSprite(Square((x,y)))
+        squares.add(temp)
+
+# for s in squares:
+#     print(s)
 
 # create pieces
 white_pieces = generate_pieces("W")
@@ -212,32 +240,19 @@ black_pieces = generate_pieces("B")
 pieces = white_pieces.copy()
 pieces.add(black_pieces)
 
-# peek a square by name or coordinates e.g. "A1" or (0,7)
-# returns the first piece found, or None if no pieces are on the square
-def peek(square):
-    if type(square) == tuple:
-        peek_coords = square
-    else:
-        peek_coords = square_coords(square)
-
-    if not valid_coord(peek_coords):
-        return None
-
-    for p in pieces:
-        if p.coords == peek_coords:
-            return p
-    return None
 
 """ 
-epawn = peek("e2")
+epawn = Square("e2").peek()
 # add black pieces to d3 f3
-peek("d7").move("d3")
-peek("f7").move("f3")
-print([square_name(m) for m in epawn.get_moves()])
+Square("d7").peek().move("d3")
+Square("f7").peek().move("f3")
+print([m.name for m in epawn.get_moves()])
 
-peek("a2").move("a6")
-peek("c2").move("c6")
-print([square_name(m) for m in peek("b7").get_moves()])
+Square("a2").peek().move("a6")
+Square("c2").peek().move("c6")
+print([m.name for m in Square("b7").peek().get_moves()])
+
+print([s.name for s in Square("d1").peek().probe_line((-1,-1))])
 """
 
 if __name__ == "__main__":

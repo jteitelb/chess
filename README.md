@@ -5,13 +5,13 @@ a chess game, just for fun
 - Refactor / Design Classes (currently a bit spaghetti / badly coupled)
   - decouple UI from logic (will make testing easier)
   - constants
-  - handle coords/square names in Square class? (not UI related), and create SquareSprite class?
 - UI
   - click to highlight square
   - moving pieces by click
 - unit tests
   - Module functions
-    - valid_coord
+  - Square methods
+    - is_valid
     - peek
   - Piece methods
     - move
