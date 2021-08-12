@@ -12,7 +12,7 @@ WHITE_SQUARE = (255, 231, 184)
 BLACK_SQUARE = (179, 133, 91)
 HIGHLIGHT_COLOR = (255,255,50)
 
-C_MAP = {0: "W", 1: "B"}
+COLOR_MAP = {0: "W", 1: "B"}
 highlighted = []
 
 class Square():
@@ -97,21 +97,23 @@ class SquareSprite(pygame.sprite.Sprite):
     def __init__(self, square):
         super().__init__()
         self.square = square
-        self.color = (self.square.x + self.square.y) % 2
+        self.color = COLOR_MAP[(self.square.x + self.square.y) % 2]
         self.image = pygame.Surface(SQUARE_DIMENSIONS)
         
         if (square.x,square.y) in highlighted:
             self.image.fill(HIGHLIGHT_COLOR)
-        elif self.color:
+        elif self.color == "B":
             self.image.fill(BLACK_SQUARE)
-        else:
+        elif self.color == "W":
             self.image.fill(WHITE_SQUARE)
+        else:
+            raise ValueError("Unexpected Color")
         self.rect = self.image.get_rect()
         self.rect.x = self.square.x * SQUARE_SIZE
         self.rect.y = self.square.y * SQUARE_SIZE
 
     def __repr__(self):
-        return f"{self.square.name}: {C_MAP[self.color]}"
+        return f"{self.square.name}: {self.color}"
 
 class Piece(pygame.sprite.Sprite):
     def __init__(self, color, piece_type, square):
