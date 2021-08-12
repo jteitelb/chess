@@ -26,8 +26,6 @@ class Square():
         else:
             raise TypeError("Expected tuple or str")
     
-
-
     @property
     def coords(self):
         return (self.x, self.y)
@@ -60,7 +58,8 @@ class Square():
         return None
     
     def relative(self, relative_pos):
-        return Square(add_coords(self.coords, relative_pos))
+        (dx,dy) = relative_pos
+        return Square((self.x + dx, self.y + dy))
 
     def __repr__(self):
         return f"({self.x},{self.y})"
@@ -142,7 +141,7 @@ class Piece(pygame.sprite.Sprite):
     # return a list of squares on the board in the direction probed up to and including the first non-empty square
     def probe_line(self, direction):
         results = []
-        current = Square(add_coords(self.square.coords, direction))
+        current = self.square.relative(direction)
         searching = True
         while searching:
             found = current.peek()
@@ -150,7 +149,7 @@ class Piece(pygame.sprite.Sprite):
                 results.append(current)
             if (current.peek() != None) or (not current.is_valid()):
                 searching = False
-            current = Square(add_coords(current.coords, direction))
+            current = current.relative(direction)
         return results
     
     def probe_multi(self, directions):
@@ -216,9 +215,6 @@ def generate_pieces(color):
         result.add(tmp)
     return result
 
-
-def add_coords(a, b):
-    return tuple(x + y for x, y in zip(a,b))
 
 # create squares
 squares = pygame.sprite.Group()
