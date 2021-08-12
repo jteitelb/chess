@@ -15,7 +15,7 @@ HIGHLIGHT_COLOR = (255,255,50)
 COLOR_MAP = {0: "W", 1: "B"}
 highlighted = []
 
-class Square():
+class Square:
     def __init__(self, square):
         if type(square) == tuple:
             (self.x, self.y) = square
@@ -25,7 +25,9 @@ class Square():
             self.y = (8 - int(r))
         else:
             raise TypeError("Expected tuple or str")
-    
+            
+        if not self.is_valid():
+            raise ValueError("Attempted to create invalid Square")
     @property
     def coords(self):
         return (self.x, self.y)
@@ -125,11 +127,13 @@ class Piece(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         (self.rect.x, self.rect.y) = self.square.screen_coords
 
-    def move(self, square):
-        if square.is_valid():
-            self.square = square
-        else:
-            raise ValueError("Invalid Coordinates")
+    def move(self, square_name):
+        try:
+            square = Square(square_name)
+        except ValueError:
+            raise ValueError(f"Invalid square: \"{square_name}\"")
+
+        self.square = square
         (self.rect.x, self.rect.y) = self.square.screen_coords
 
     def get_image_filename(self):
@@ -143,15 +147,15 @@ class Piece(pygame.sprite.Sprite):
     def probe_line(self, direction):
         (dx, dy) = direction
         results = []
-        current = self.square.relative(dx, dy)
-        searching = True
-        while searching:
-            found = current.peek()
-            if current.is_valid():
-                results.append(current)
-            if (current.peek() != None) or (not current.is_valid()):
-                searching = False
-            current = current.relative(dx, dy)
+        current = self.square
+        while True:
+            try:
+                current = current.relative(dx, dy)
+            except ValueError:
+                break
+            results.append(current)
+            if current.peek() != None:
+                break
         return results
     
     def probe_multi(self, directions):
@@ -239,12 +243,12 @@ pieces.add(black_pieces)
 
 epawn = Square("e2").peek()
 # add black pieces to d3 f3
-Square("d7").peek().move(Square("d3"))
-Square("f7").peek().move(Square("f3"))
+Square("d7").peek().move("d3")
+Square("f7").peek().move("f3")
 print([m.name for m in epawn.get_moves()])
 
-Square("a2").peek().move(Square("a6"))
-Square("c2").peek().move(Square("c6"))
+Square("a2").peek().move("a6")
+Square("c2").peek().move("c6")
 print([m.name for m in Square("b7").peek().get_moves()])
 
 print([s.name for s in Square("d1").peek().probe_line((-1,-1))])
