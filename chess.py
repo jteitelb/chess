@@ -1,12 +1,8 @@
 import pygame
-import board
 from typing import Tuple
 
-BOARD_LENGTH = 560
-WIN_WIDTH = BOARD_LENGTH
-WIN_HEIGHT = BOARD_LENGTH
-SQUARE_SIZE = BOARD_LENGTH // 8
-SQUARE_DIMENSIONS = (SQUARE_SIZE, SQUARE_SIZE)
+from util import *
+from square import Square
 
 WHITE_SQUARE = (255, 231, 184)
 BLACK_SQUARE = (179, 133, 91)
@@ -14,61 +10,6 @@ HIGHLIGHT_COLOR = (255,255,50)
 
 COLOR_MAP = {0: "W", 1: "B"}
 highlighted = []
-
-class Square:
-    def __init__(self, square):
-        if type(square) == tuple:
-            if len(square) != 2:
-                raise TypeError("Square expects 2 coordinates")
-            (x,y) = square
-            if type(x) != int or type(y) != int:
-                raise TypeError("Square expects integers when tuple given")
-            (self.x, self.y) = square
-        elif type(square) == str:
-            (f, r) = square
-            self.x = ord(f.lower()) - ord('a')
-            self.y = (8 - int(r))
-        else:
-            raise TypeError("Expected tuple or str")
-            
-        if not self.is_valid():
-            raise ValueError("Attempted to create invalid Square")
-    @property
-    def coords(self):
-        return (self.x, self.y)
-    @property
-    def s_file(self):
-        return chr(self.x + ord('a'))
-    @property
-    def s_rank(self):
-        return (8 - self.y)
-    @property
-    def name(self):
-        return f"{self.s_file}{self.s_rank}"
-    @property
-    def screen_coords(self):
-        return (SQUARE_SIZE * self.x, SQUARE_SIZE * self.y)
-
-    def is_valid(self):
-        (x,y) = self.coords
-        if x < 0 or x > 7 or y < 0 or y > 7:
-            return False
-        return True
-    # peek a square by name or coordinates e.g. "A1" or (0,7)
-    # returns the first piece found, or None if no pieces are on the square
-    def peek(self):
-        if not self.is_valid():
-            return None
-        for p in pieces:
-            if p.square.coords == self.coords:
-                return p
-        return None
-    
-    def relative(self, dx, dy):
-        return Square((self.x + dx, self.y + dy))
-
-    def __repr__(self):
-        return f"({self.x},{self.y})"
 
 """ 
 def square_coords(square: str) -> Tuple[int, int]:
@@ -156,7 +97,7 @@ class Piece(pygame.sprite.Sprite):
             except ValueError:
                 break
             results.append(current)
-            if current.peek() != None:
+            if current.peek(pieces) != None:
                 break
         return results
     
@@ -181,17 +122,17 @@ class Piece(pygame.sprite.Sprite):
         else:
             raise ValueError("unexpected color")
 
-        if single_move.peek() == None:
+        if single_move.peek(pieces) == None:
             moves.append(single_move)
-            if double_move.peek() == None:
+            if double_move.peek(pieces) == None:
                 moves.append(double_move)
         
         # captures
         (x,y) = single_move.coords
         l_capture = Square((x-1, y))
         r_capture = Square((x+1, y))
-        l_piece = l_capture.peek()
-        r_piece = r_capture.peek()
+        l_piece = l_capture.peek(pieces)
+        r_piece = r_capture.peek(pieces)
         if l_piece != None and l_piece.color != self.color:
             moves.append(l_capture)
         if r_piece != None and r_piece.color != self.color:
@@ -231,29 +172,26 @@ for y in range(8):
         temp = SquareSprite(Square((x,y)))
         squares.add(temp)
 
-# for s in squares:
-#     print(s)
-
 # create pieces
 white_pieces = generate_pieces("W")
 black_pieces = generate_pieces("B")
 pieces = white_pieces.copy()
 pieces.add(black_pieces)
 
+################################################################
 
-""" 
-epawn = Square("e2").peek()
+epawn = Square("e2").peek(pieces)
 # add black pieces to d3 f3
-Square("d7").peek().move("d3")
-Square("f7").peek().move("f3")
+Square("d7").peek(pieces).move("d3")
+Square("f7").peek(pieces).move("f3")
 print([m.name for m in epawn.get_moves()])
 
-Square("a2").peek().move("a6")
-Square("c2").peek().move("c6")
-print([m.name for m in Square("b7").peek().get_moves()])
+Square("a2").peek(pieces).move("a6")
+Square("c2").peek(pieces).move("c6")
+print([m.name for m in Square("b7").peek(pieces).get_moves()])
 
-print([s.name for s in Square("d1").peek().probe_line((-1,-1))])
-"""
+print([s.name for s in Square("d1").peek(pieces).probe_line((-1,-1))])
+
 
 if __name__ == "__main__":
     window = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))

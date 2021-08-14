@@ -4,7 +4,6 @@ a chess game, just for fun
 ### Todo
 - Refactor / Design Classes (currently a bit spaghetti / badly coupled)
   - decouple UI from logic (will make testing easier)
-  - constants
 - UI
   - click to highlight square
   - moving pieces by click
