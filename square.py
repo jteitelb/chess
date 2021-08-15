@@ -5,7 +5,7 @@ def squareify(maybeSquare):
         square = maybeSquare
     else:
         square = Square(maybeSquare)
-    return maybeSquare
+    return square
 
 class Square:
     def __init__(self, square):
