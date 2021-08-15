@@ -1,5 +1,12 @@
 from util import *
 
+def squareify(maybeSquare):
+    if type(maybeSquare) == Square:
+        square = maybeSquare
+    else:
+        square = Square(maybeSquare)
+    return maybeSquare
+
 class Square:
     def __init__(self, square):
         if type(square) == tuple:
@@ -39,8 +46,8 @@ class Square:
         if x < 0 or x > 7 or y < 0 or y > 7:
             return False
         return True
-    # peek a square by name or coordinates e.g. "A1" or (0,7)
-    # returns the first piece found, or None if no pieces are on the square
+    
+    # TODO: take out of square class
     def peek(self, pieces):
         if not self.is_valid():
             return None

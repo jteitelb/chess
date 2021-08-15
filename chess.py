@@ -1,6 +1,7 @@
 import pygame
 from typing import Tuple
 
+import board
 from util import *
 from square import Square
 
@@ -73,12 +74,9 @@ class Piece(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         (self.rect.x, self.rect.y) = self.square.screen_coords
 
-    def move(self, square_name):
-        try:
-            square = Square(square_name)
-        except ValueError:
-            raise ValueError(f"Invalid square: \"{square_name}\"")
-
+    def move(self, square):
+        if type(square) != Square:
+            square = Square(square)
         self.square = square
         (self.rect.x, self.rect.y) = self.square.screen_coords
 
