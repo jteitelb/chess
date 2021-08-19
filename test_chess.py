@@ -1,4 +1,5 @@
 from chess import *
+import board
 import pytest
 
 @pytest.fixture
@@ -12,11 +13,11 @@ def supply_square_names(supply_board_coords):
 
 @pytest.fixture
 def black_pieces():
-    return generate_pieces("B")
+    return board.generate_pieces("B")
 
 @pytest.fixture
 def white_pieces():
-    return generate_pieces("W")
+    return board.generate_pieces("W")
 
 def test_generate_pieces(black_pieces, white_pieces):
     assert len(black_pieces) == 16

@@ -36,3 +36,58 @@ def peek(square):
         if p.square.coords == square.coords:
             return p
     return None
+
+# probe in a straight line given a direction e.g. (0,1) will probe downward
+# return a list of squares on the board in the direction probed up to and including the first non-empty square
+def probe_line(piece, direction):
+    (dx, dy) = direction
+    results = []
+    current = piece.square
+    while True:
+        try:
+            current = current.relative(dx, dy)
+        except ValueError:
+            break
+        results.append(current)
+        if peek(current) != None:
+            break
+    return results
+
+def probe_multi(piece, directions):
+    res = []
+    for d in directions:
+        res += probe_line(piece, d)
+
+def get_moves(piece):
+    if piece.piece_type == "P":
+        return get_pawn_moves(piece)
+
+# TODO: promotions and en passant
+def get_pawn_moves(piece):
+    moves = []
+    if piece.color == "W":
+        single_move = piece.square.relative(0,-1)
+        double_move = piece.square.relative(0,-2)
+    elif piece.color == "B":
+        single_move = piece.square.relative(0,1)
+        double_move = piece.square.relative(0,2)
+    else:
+        raise ValueError("unexpected color")
+
+    if peek(single_move) == None:
+        moves.append(single_move)
+        if peek(double_move) == None:
+            moves.append(double_move)
+    
+    # captures
+    (x,y) = single_move.coords
+    l_capture = Square((x-1, y))
+    r_capture = Square((x+1, y))
+    l_piece = peek(l_capture)
+    r_piece = peek(r_capture)
+    if l_piece != None and l_piece.color != piece.color:
+        moves.append(l_capture)
+    if r_piece != None and r_piece.color != piece.color:
+        moves.append(r_capture)
+
+    return moves

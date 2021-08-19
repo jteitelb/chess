@@ -48,6 +48,9 @@ class PieceSprite(pygame.sprite.Sprite):
 
     def __str__(self):
         return f"{self.color.lower()}{self.piece_type} {self.square.name}"
+    
+    def update(self):
+        (self.rect.x, self.rect.y) = self.piece.square.screen_coords
 
 
 # create SquareSprites
@@ -63,17 +66,17 @@ for piece in board.pieces:
 
 ################################################################
 
-# epawn = Square("e2").peek(pieces)
-# # add black pieces to d3 f3
-# Square("d7").peek(pieces).move("d3")
-# Square("f7").peek(pieces).move("f3")
-# print([m.name for m in epawn.get_moves()])
+epawn = board.peek("e2")
+# add black pieces to d3 f3
+board.peek("d7").move("d3")
+board.peek("f7").move("f3")
+print([m.name for m in board.get_moves(epawn)])
 
-# Square("a2").peek(pieces).move("a6")
-# Square("c2").peek(pieces).move("c6")
-# print([m.name for m in Square("b7").peek(pieces).get_moves()])
+board.peek("a2").move("a6")
+board.peek("c2").move("c6")
+print([m.name for m in board.get_moves(board.peek("b7"))])
 
-# print([s.name for s in Square("d1").peek(pieces).probe_line((-1,-1))])
+print([s.name for s in board.probe_line(board.peek("d1"), (-1,-1))])
 
 
 if __name__ == "__main__":
@@ -87,6 +90,8 @@ if __name__ == "__main__":
 
         squares.draw(window)
         pieceGroup.draw(window)
+        pieceGroup.update()
+        
         pygame.display.update()
 
     
