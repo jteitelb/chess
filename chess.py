@@ -46,9 +46,10 @@ class PieceSprite(pygame.sprite.Sprite):
     def get_image_filename(self):
         return f"pieces/{self.piece.color.lower()}{self.piece.piece_type}.png"
 
-    def __str__(self):
-        return f"{self.color.lower()}{self.piece_type} {self.square.name}"
-    
+    def __repr__(self):
+        return f"PieceSprite:{self.piece.color.lower()}{self.piece.piece_type} {self.piece.square.name}"
+
+
     def update(self):
         (self.rect.x, self.rect.y) = self.piece.square.screen_coords
 
@@ -78,6 +79,7 @@ print([m.name for m in board.get_moves(board.peek("b7"))])
 
 print([s.name for s in board.probe_line(board.peek("d1"), (-1,-1))])
 
+clickedPiece = None
 
 if __name__ == "__main__":
     window = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
@@ -87,6 +89,26 @@ if __name__ == "__main__":
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 running = False
+            if e.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                (x,y) = pos
+                clicked = Square((x//SQUARE_SIZE, y//SQUARE_SIZE))
+                if clickedPiece == None:
+                    clickedPiece = board.peek(clicked)
+                    print(clicked.name)
+                else:
+                    captured = board.peek(clicked)
+                    print(captured)
+                    print(type(captured))
+                    if captured != None:
+                        for p in pieceGroup:
+                            if p.piece == captured:
+                                p.kill()
+                    clickedPiece.move(clicked)
+                    clickedPiece = None
+
+
+        
 
         squares.draw(window)
         pieceGroup.draw(window)
